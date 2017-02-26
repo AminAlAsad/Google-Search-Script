@@ -1,0 +1,56 @@
+// *** Customizable Values *** //
+
+var COLUMN_NUMBER_OF_COMPANYNAME = 3;  // Column C
+
+var COLUMN_NUMBER_OF_COMPANYLINK = 4;  // Column D
+
+var ROW_NUMBER_TO_START = 2; // Assume that the company name sets start from 2nd row
+
+// *************************** //
+
+
+//Call custom search api to get link of certain keyword
+function searchFor( query ) {
+
+  // Base URL to access customsearch
+  var urlTemplate = "https://www.googleapis.com/customsearch/v1?key=%KEY%&cx=%CX%&q=%Q%";
+
+  // Script-specific credentials & search engine
+  var ApiKey = "AIzaSyApfoGRCV5zbwyj6RVTN2rpWRhIrWSr7oc";
+  var searchEngineID = "010259632496225245523:f47fmbgcljk";
+
+  // Build custom url
+  var url = urlTemplate
+    .replace("%KEY%", encodeURIComponent(ApiKey))
+    .replace("%CX%", encodeURIComponent(searchEngineID))
+    .replace("%Q%", encodeURIComponent(query));
+
+  var params = {
+    muteHttpExceptions: true
+  };
+
+  // Perform search
+  Logger.log( UrlFetchApp.getRequest(url, params) );  // Log query to be sent
+  var response = UrlFetchApp.fetch(url, params);
+  var respCode = response.getResponseCode();
+
+  if (respCode !== 200) {
+    throw new Error ("Error " +respCode + " " + response.getContentText());
+  }
+  else {
+    // Successful search, log & return results
+    var result = JSON.parse(response.getContentText());
+    return result.items[0].link;
+    
+  }
+}
+function myFunction() {
+  var sheet = SpreadsheetApp.getActiveSheet();
+  
+  for (var row = ROW_NUMBER_TO_START; row <= sheet.getDataRange().getNumRows(); row++)
+  {
+    var link = searchFor(sheet.getDataRange().getCell(row, COLUMN_NUMBER_OF_COMPANYNAME).getValue())
+    sheet.getDataRange().getCell(row, COLUMN_NUMBER_OF_COMPANYLINK).setValue(link);
+  }
+
+}
